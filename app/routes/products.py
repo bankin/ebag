@@ -2,12 +2,8 @@ import decimal
 
 from fastapi import APIRouter, Depends, Query
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.main import get_session
 from app.models.product import ProductRead
-
-from app.service import products as service
+from app.service.products import ProductService
 
 router = APIRouter(
     prefix="/products",
@@ -23,10 +19,9 @@ async def search(
     category: str | None = None,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_session),
+    service: ProductService = Depends(ProductService),
 ) -> list[ProductRead]:
     return await service.search(
-        db,
         name=name,
         sku=sku,
         min_price=min_price,
