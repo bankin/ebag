@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db.schema.category import Category as CategorySchema
 from app.db.schema.product import Product as ProductSchema
-from app.exceptions import ConflictError, NameConflictError, NotFoundError
+from app.config.exceptions import ConflictError, NameConflictError, NotFoundError
 from app.models.category import CategoryRead as Category, CategoryCreate, CategoryUpdate
 
 # The parent relationship defaults to lazy loading (async-unsafe outside an

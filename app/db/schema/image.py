@@ -1,7 +1,7 @@
 from sqlmodel import Field
 
 from app.db.util.timestamps import TimestampedModel
-from app.storage import IMAGE_URL_PREFIX
+from app.config.storage import IMAGE_URL_PREFIX
 
 
 class Image(TimestampedModel, table=True):

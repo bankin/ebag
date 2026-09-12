@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db.schema.category import Category as CategorySchema
 from app.db.schema.product import Product as ProductSchema
-from app.exceptions import NameConflictError, NotFoundError
+from app.config.exceptions import NameConflictError, NotFoundError
 from app.models.product import ProductRead as Product, ProductCreate, ProductUpdate
 from app.service import images as images_service
 from app.service.categories import ensure_category_exists

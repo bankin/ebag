@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import storage
+from app.config import storage
+from app.config.exceptions import NotFoundError
 from app.db.schema.image import Image as ImageSchema
-from app.exceptions import NotFoundError
 from app.models.image import ImageRead
 
 

@@ -10,6 +10,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "fastapi[standard]>=0.141.1",
     "psycopg2-binary>=2.9.13",
+    "pydantic-settings>=2.15.0",
     "sqlmodel>=0.0.42",
     "uvicorn>=0.52.4",
 ]

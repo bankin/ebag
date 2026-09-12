@@ -1,13 +1,15 @@
-import os
+"""Image storage config and file save/delete logic."""
+
 import uuid
 from pathlib import Path
 
-from app.exceptions import InvalidImageError
+from app.config.exceptions import InvalidImageError
+from app.config.settings import settings
 
-IMAGE_STORAGE_DIR = Path(os.environ.get("IMAGE_STORAGE_DIR", "data/images"))
+IMAGE_STORAGE_DIR = settings.image_storage_dir
 IMAGE_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
-IMAGE_URL_PREFIX = "/images"
+IMAGE_URL_PREFIX = settings.image_url_prefix
 
 MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
 

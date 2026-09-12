@@ -1,10 +1,11 @@
-import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+from app.config.settings import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -15,14 +16,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# ALEMBIC_DATABASE_URL (see docker-compose.yml) overrides alembic.ini's
-# sqlalchemy.url. A separate parameter from the app's DATABASE_URL (used in
-# app/db/main.py) since Alembic runs synchronously and needs a sync driver.
-# Falls back to alembic.ini's value when the env var isn't set (local,
-# non-docker development).
-alembic_database_url = os.environ.get("ALEMBIC_DATABASE_URL")
-if alembic_database_url:
-    config.set_main_option("sqlalchemy.url", alembic_database_url)
+if settings.alembic_database_url:
+    config.set_main_option("sqlalchemy.url", settings.alembic_database_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
