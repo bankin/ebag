@@ -94,3 +94,4 @@ async def delete(db: AsyncSession, category_id: int) -> None:
         )
 
     await db.delete(db_category)
+    await db.commit()
