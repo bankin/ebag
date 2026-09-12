@@ -11,6 +11,11 @@ from app.models.category import CategoryRead as Category, CategoryCreate, Catego
 _WITH_PARENT = [selectinload(CategorySchema.parent)]
 
 
+async def ensure_category_exists(db: AsyncSession, category_id: int, label: str = "Category") -> None:
+    if await db.get(CategorySchema, category_id) is None:
+        raise NotFoundError(f"{label} {category_id} not found")
+
+
 async def create(db: AsyncSession, data: CategoryCreate) -> Category:
     db_category = CategorySchema(name=data.name, parent_id=data.parent_id)
     db.add(db_category)
@@ -54,9 +59,7 @@ async def update(db: AsyncSession, category_id: int, data: CategoryUpdate) -> Ca
 
         if new_parent_id != db_category.parent_id:
             if new_parent_id is not None:
-                parent = await db.get(CategorySchema, new_parent_id)
-                if parent is None:
-                    raise NotFoundError(f"Parent category {new_parent_id} not found")
+                await ensure_category_exists(db, new_parent_id, "Parent category")
 
             db_category.parent_id = new_parent_id
 

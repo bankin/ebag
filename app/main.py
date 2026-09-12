@@ -23,6 +23,6 @@ async def handle_not_found(request: Request, exc: NotFoundError) -> JSONResponse
 async def handle_name_conflict(request: Request, exc: NameConflictError) -> JSONResponse:
     return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": exc.message})
 
-app.include_router(products.router)
 app.include_router(products_internal.router)
+app.include_router(products.router)
 app.include_router(categories_internal.router)
