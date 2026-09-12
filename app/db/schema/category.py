@@ -1,11 +1,13 @@
-from sqlmodel import SQLModel, Field, Relationship
-
 from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship
+
+from app.db.util.timestamps import TimestampedModel
 
 if TYPE_CHECKING:
     from app.db.schema.product import Product
 
-class Category(SQLModel, table=True):
+class Category(TimestampedModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field()
 

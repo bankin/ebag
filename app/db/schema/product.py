@@ -1,10 +1,12 @@
 import decimal
 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
 
 from app.db.schema.category import Category
+from app.db.util.timestamps import TimestampedModel
 
-class Product(SQLModel, table=True):
+
+class Product(TimestampedModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     title: str = Field()
     description: str = Field(nullable=True)
