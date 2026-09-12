@@ -1,11 +1,26 @@
 from __future__ import annotations
 
-from typing import Optional
-
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
-class Category(BaseModel):
+class BaseCategory(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
-    parent: Optional[Category] = None
+
+
+class CategoryRead(BaseCategory):
+    model_config = ConfigDict(from_attributes=True)
+
+    parent: BaseCategory | None = None
+
+
+class CategoryCreate(BaseModel):
+    name: str
+    parent_id: int | None = None
+
+
+class CategoryUpdate(BaseModel):
+    name: str | None = None
+    parent_id: int | None = None

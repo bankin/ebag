@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
@@ -13,7 +13,10 @@ class Category(TimestampedModel, table=True):
 
     parent_id: int | None = Field(default=None, nullable=True, foreign_key='category.id')
 
-    parent: Category | None = Relationship(back_populates="children", sa_relationship_kwargs={"lazy": "select"})
+    parent: Optional['Category'] = Relationship(
+        back_populates="children",
+        sa_relationship_kwargs={"lazy": "select", "remote_side": "Category.id"},
+    )
     children: list['Category'] = Relationship(back_populates='parent')
 
     products: list['Product'] = Relationship(back_populates='category')

@@ -2,7 +2,7 @@ import decimal
 
 from pydantic import BaseModel
 
-from app.models.category import Category
+from app.models.category import CategoryRead
 
 
 class Product(BaseModel):
@@ -12,4 +12,4 @@ class Product(BaseModel):
     image: str | None = None
     sku: str
     price: decimal.Decimal
-    category: Category
+    category: CategoryRead

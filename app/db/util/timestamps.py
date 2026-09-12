@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from sqlmodel import Field, SQLModel
 
 class TimestampedModel(SQLModel):
-    created_on: datetime | None = Field(
+    created_at: datetime | None = Field(
         default=None,
         sa_type=sa.DateTime(timezone=True),
         sa_column_kwargs={"server_default": sa.func.now()},
