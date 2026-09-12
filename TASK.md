@@ -9,6 +9,7 @@ You can choose to use either FastAPI or Django. You may choose the database and 
 - unique product identifier (SKU)
 - price
 - category - link to a category model
+
 * Create a category model. The model must contain at least:
 - name
 - parent - link to category model
