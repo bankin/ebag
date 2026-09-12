@@ -18,6 +18,26 @@ async def ensure_category_exists(db: AsyncSession, category_id: int, label: str 
         raise NotFoundError(f"{label} {category_id} not found")
 
 
+async def _creates_cycle(db: AsyncSession, category_id: int, new_parent_id: int) -> bool:
+    """True if new_parent_id is category_id itself or one of its descendants
+    — i.e. category_id is already an ancestor of new_parent_id, so setting
+    new_parent_id as its parent would close a loop."""
+    current_id = new_parent_id
+    visited = set()
+
+    while current_id is not None:
+        if current_id == category_id:
+            return True
+
+        if current_id in visited:
+            return False  # already-corrupt data; don't loop forever
+
+        visited.add(current_id)
+        current_id = await db.scalar(select(CategorySchema.parent_id).where(CategorySchema.id == current_id))
+
+    return False
+
+
 async def create(db: AsyncSession, data: CategoryCreate) -> Category:
     db_category = CategorySchema(name=data.name, parent_id=data.parent_id)
     db.add(db_category)
@@ -62,6 +82,12 @@ async def update(db: AsyncSession, category_id: int, data: CategoryUpdate) -> Ca
         if new_parent_id != db_category.parent_id:
             if new_parent_id is not None:
                 await ensure_category_exists(db, new_parent_id, "Parent category")
+
+                if await _creates_cycle(db, category_id, new_parent_id):
+                    raise ConflictError(
+                        f"Category {new_parent_id} is a descendant of {category_id}; "
+                        "setting it as parent would create a cycle"
+                    )
 
             db_category.parent_id = new_parent_id
 

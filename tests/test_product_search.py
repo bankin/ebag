@@ -8,6 +8,7 @@ import decimal
 import pytest
 
 from app.service import products as service
+from tests.conftest import _make_product
 
 
 async def test_search_with_no_filters_returns_everything(db_session, seeded):
@@ -147,3 +148,23 @@ async def test_search_with_negative_max_price_matches_nothing(db_session, seeded
     results = await service.search(db_session, max_price=decimal.Decimal("-5"))
 
     assert results == []
+
+
+async def test_search_by_name_treats_percent_as_literal(db_session, seeded):
+    category_id = seeded["vegetables"].id
+    await _make_product(db_session, "Save 10% Today", "LIKE-PCT-1", "1.00", category_id)
+    await _make_product(db_session, "Save 10X Today", "LIKE-PCT-2", "1.00", category_id)
+
+    results = await service.search(db_session, name="10% Today")
+
+    assert [p.sku for p in results] == ["LIKE-PCT-1"]
+
+
+async def test_search_by_sku_treats_underscore_as_literal(db_session, seeded):
+    category_id = seeded["vegetables"].id
+    await _make_product(db_session, "A", "UNDER_SCORE-1", "1.00", category_id)
+    await _make_product(db_session, "B", "UNDERXSCORE-1", "1.00", category_id)
+
+    results = await service.search(db_session, sku="UNDER_SCORE")
+
+    assert [p.sku for p in results] == ["UNDER_SCORE-1"]

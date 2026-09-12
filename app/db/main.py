@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from app.config.settings import settings
 from app.db.schema import product, category, image
 
-engine = create_async_engine(settings.database_url, pool_pre_ping=True, echo=True)
+engine = create_async_engine(settings.database_url, pool_pre_ping=True, echo=settings.debug)
 
 # def init_db() -> None:
 #     SQLModel.metadata.create_all(engine)

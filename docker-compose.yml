@@ -20,6 +20,7 @@ services:
     build: .
     restart: unless-stopped
     environment:
+      DEBUG: "true"
       DATABASE_URL: postgresql+asyncpg://root:some@db:5432/ebag
       ALEMBIC_DATABASE_URL: postgresql://root:some@db:5432/ebag
       IMAGE_STORAGE_DIR: /app/data/images

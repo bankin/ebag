@@ -17,6 +17,16 @@ _LOAD_OPTIONS = [
     selectinload(ProductSchema.image),
 ]
 
+_LIKE_ESCAPE_CHAR = "\\"
+
+
+def _escape_like(value: str) -> str:
+    return (
+        value.replace(_LIKE_ESCAPE_CHAR, _LIKE_ESCAPE_CHAR * 2)
+        .replace("%", f"{_LIKE_ESCAPE_CHAR}%")
+        .replace("_", f"{_LIKE_ESCAPE_CHAR}_")
+    )
+
 
 async def create(db: AsyncSession, data: ProductCreate) -> Product:
     await ensure_category_exists(db, data.category_id)
@@ -42,6 +52,15 @@ async def create(db: AsyncSession, data: ProductCreate) -> Product:
         raise NameConflictError("Product SKU already exists")
 
     return await get(db, db_product.id)
+
+
+async def _image_still_in_use(db: AsyncSession, image_id: int, excluding_product_id: int) -> bool:
+    count = await db.scalar(
+        select(func.count())
+        .select_from(ProductSchema)
+        .where(ProductSchema.image_id == image_id, ProductSchema.id != excluding_product_id)
+    )
+    return bool(count)
 
 
 async def get(db: AsyncSession, product_id: int) -> Product:
@@ -96,7 +115,7 @@ async def update(db: AsyncSession, product_id: int, data: ProductUpdate) -> Prod
 
         raise NameConflictError("Product SKU already exists")
 
-    if old_image_id is not None:
+    if old_image_id is not None and not await _image_still_in_use(db, old_image_id, product_id):
         await images_service.delete(db, old_image_id)
 
     return await get(db, product_id)
@@ -113,7 +132,7 @@ async def delete(db: AsyncSession, product_id: int) -> None:
     await db.delete(db_product)
     await db.commit()
 
-    if old_image_id is not None:
+    if old_image_id is not None and not await _image_still_in_use(db, old_image_id, product_id):
         await images_service.delete(db, old_image_id)
 
 
@@ -156,10 +175,10 @@ async def search(
     stmt = select(ProductSchema).options(*_LOAD_OPTIONS)
 
     if name:
-        stmt = stmt.where(ProductSchema.title.ilike(f"%{name}%"))
+        stmt = stmt.where(ProductSchema.title.ilike(f"%{_escape_like(name)}%", escape=_LIKE_ESCAPE_CHAR))
 
     if sku:
-        stmt = stmt.where(ProductSchema.sku.ilike(f"%{sku}%"))
+        stmt = stmt.where(ProductSchema.sku.ilike(f"%{_escape_like(sku)}%", escape=_LIKE_ESCAPE_CHAR))
 
     if min_price is not None:
         stmt = stmt.where(ProductSchema.price >= min_price)

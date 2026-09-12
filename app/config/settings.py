@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    debug: bool = False
+
     database_url: str = "postgresql+asyncpg://root:some@localhost:5432/ebag"
     alembic_database_url: str = "postgresql://root:some@localhost:5432/ebag"
 
