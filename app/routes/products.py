@@ -9,7 +9,3 @@ router = APIRouter(
 def search():
     return []
 
-
-@router.get("/{sku}")
-def read_sku(sku: str):
-    return {}

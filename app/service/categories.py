@@ -1,9 +1,11 @@
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.schema.category import Category as CategorySchema
-from app.exceptions import NameConflictError, NotFoundError
+from app.db.schema.product import Product as ProductSchema
+from app.exceptions import ConflictError, NameConflictError, NotFoundError
 from app.models.category import CategoryRead as Category, CategoryCreate, CategoryUpdate
 
 # The parent relationship defaults to lazy loading (async-unsafe outside an
@@ -78,5 +80,17 @@ async def delete(db: AsyncSession, category_id: int) -> None:
     if db_category is None:
         raise NotFoundError(f"Category {category_id} not found")
 
+    child_count = await db.scalar(
+        select(func.count()).select_from(CategorySchema).where(CategorySchema.parent_id == category_id)
+    )
+    product_count = await db.scalar(
+        select(func.count()).select_from(ProductSchema).where(ProductSchema.category_id == category_id)
+    )
+
+    if child_count or product_count:
+        raise ConflictError(
+            f"Category {category_id} has {child_count} child categories and "
+            f"{product_count} products and cannot be deleted"
+        )
+
     await db.delete(db_category)
-    await db.commit()
