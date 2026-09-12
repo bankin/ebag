@@ -9,13 +9,20 @@ from app.db.schema.category import Category as CategorySchema
 from app.db.schema.product import Product as ProductSchema
 from app.exceptions import NameConflictError, NotFoundError
 from app.models.product import ProductRead as Product, ProductCreate, ProductUpdate
+from app.service import images as images_service
 from app.service.categories import ensure_category_exists
 
-_WITH_CATEGORY = [selectinload(ProductSchema.category).selectinload(CategorySchema.parent)]
+_LOAD_OPTIONS = [
+    selectinload(ProductSchema.category).selectinload(CategorySchema.parent),
+    selectinload(ProductSchema.image),
+]
 
 
 async def create(db: AsyncSession, data: ProductCreate) -> Product:
     await ensure_category_exists(db, data.category_id)
+
+    if data.image_id is not None:
+        await images_service.ensure_image_exists(db, data.image_id)
 
     db_product = ProductSchema(
         title=data.title,
@@ -23,6 +30,7 @@ async def create(db: AsyncSession, data: ProductCreate) -> Product:
         sku=data.sku,
         price=data.price,
         category_id=data.category_id,
+        image_id=data.image_id,
     )
     db.add(db_product)
 
@@ -38,7 +46,7 @@ async def create(db: AsyncSession, data: ProductCreate) -> Product:
 
 async def get(db: AsyncSession, product_id: int) -> Product:
     db_product = await db.get(
-        ProductSchema, product_id, options=_WITH_CATEGORY, populate_existing=True
+        ProductSchema, product_id, options=_LOAD_OPTIONS, populate_existing=True
     )
 
     if db_product is None:
@@ -49,7 +57,7 @@ async def get(db: AsyncSession, product_id: int) -> Product:
 
 async def update(db: AsyncSession, product_id: int, data: ProductUpdate) -> Product:
     db_product = await db.get(
-        ProductSchema, product_id, options=_WITH_CATEGORY, populate_existing=True
+        ProductSchema, product_id, options=_LOAD_OPTIONS, populate_existing=True
     )
 
     if db_product is None:
@@ -64,6 +72,20 @@ async def update(db: AsyncSession, product_id: int, data: ProductUpdate) -> Prod
             await ensure_category_exists(db, new_category_id)
             db_product.category_id = new_category_id
 
+    # The old image (if any) is deleted once it's no longer referenced by
+    # this product — but only after the product's own commit succeeds.
+    old_image_id = None
+
+    if "image_id" in update_fields:
+        new_image_id = update_fields.pop("image_id")
+
+        if new_image_id != db_product.image_id:
+            if new_image_id is not None:
+                await images_service.ensure_image_exists(db, new_image_id)
+
+            old_image_id = db_product.image_id
+            db_product.image_id = new_image_id
+
     for field, value in update_fields.items():
         setattr(db_product, field, value)
 
@@ -74,6 +96,9 @@ async def update(db: AsyncSession, product_id: int, data: ProductUpdate) -> Prod
 
         raise NameConflictError("Product SKU already exists")
 
+    if old_image_id is not None:
+        await images_service.delete(db, old_image_id)
+
     return await get(db, product_id)
 
 
@@ -83,8 +108,13 @@ async def delete(db: AsyncSession, product_id: int) -> None:
     if db_product is None:
         raise NotFoundError(f"Product {product_id} not found")
 
+    old_image_id = db_product.image_id
+
     await db.delete(db_product)
     await db.commit()
+
+    if old_image_id is not None:
+        await images_service.delete(db, old_image_id)
 
 
 async def _resolve_category_ids(db: AsyncSession, category_name: str) -> list[int]:
@@ -123,7 +153,7 @@ async def search(
     limit: int = 50,
     offset: int = 0,
 ) -> list[Product]:
-    stmt = select(ProductSchema).options(*_WITH_CATEGORY)
+    stmt = select(ProductSchema).options(*_LOAD_OPTIONS)
 
     if name:
         stmt = stmt.where(ProductSchema.title.ilike(f"%{name}%"))

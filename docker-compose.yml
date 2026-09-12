@@ -22,11 +22,15 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://root:some@db:5432/ebag
       ALEMBIC_DATABASE_URL: postgresql://root:some@db:5432/ebag
+      IMAGE_STORAGE_DIR: /app/data/images
     ports:
       - "8080:8000"
+    volumes:
+      - image_data:/app/data/images
     depends_on:
       db:
         condition: service_healthy
 
 volumes:
   db_data:
+  image_data:

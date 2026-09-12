@@ -14,3 +14,9 @@ class ConflictError(Exception):
     def __init__(self, message: str = "Conflict"):
         self.message = message
         super().__init__(message)
+
+
+class InvalidImageError(Exception):
+    def __init__(self, message: str = "Invalid image"):
+        self.message = message
+        super().__init__(message)
