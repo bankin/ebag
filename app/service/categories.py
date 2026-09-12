@@ -22,12 +22,13 @@ async def create(db: AsyncSession, data: CategoryCreate) -> Category:
 
         raise NameConflictError("Category name already exists under this parent")
 
-    await db.refresh(db_category, attribute_names=["parent"])
-    return Category.model_validate(db_category)
+    return await get(db, db_category.id)
 
 
 async def get(db: AsyncSession, category_id: int) -> Category:
-    db_category = await db.get(CategorySchema, category_id, options=_WITH_PARENT)
+    db_category = await db.get(
+        CategorySchema, category_id, options=_WITH_PARENT, populate_existing=True
+    )
 
     if db_category is None:
         raise NotFoundError(f"Category {category_id} not found")
@@ -36,13 +37,28 @@ async def get(db: AsyncSession, category_id: int) -> Category:
 
 
 async def update(db: AsyncSession, category_id: int, data: CategoryUpdate) -> Category:
-    db_category = await db.get(CategorySchema, category_id, options=_WITH_PARENT)
+    db_category = await db.get(
+        CategorySchema, category_id, options=_WITH_PARENT, populate_existing=True
+    )
 
     if db_category is None:
         raise NotFoundError(f"Category {category_id} not found")
 
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(db_category, field, value)
+    update_fields = data.model_dump(exclude_unset=True)
+
+    if "name" in update_fields:
+        db_category.name = update_fields["name"]
+
+    if "parent_id" in update_fields:
+        new_parent_id = update_fields["parent_id"]
+
+        if new_parent_id != db_category.parent_id:
+            if new_parent_id is not None:
+                parent = await db.get(CategorySchema, new_parent_id)
+                if parent is None:
+                    raise NotFoundError(f"Parent category {new_parent_id} not found")
+
+            db_category.parent_id = new_parent_id
 
     try:
         await db.commit()
@@ -51,9 +67,7 @@ async def update(db: AsyncSession, category_id: int, data: CategoryUpdate) -> Ca
 
         raise NameConflictError("Category name already exists under this parent")
 
-    await db.refresh(db_category, attribute_names=["parent"])
-    return Category.model_validate(db_category)
-
+    return await get(db, category_id)
 
 async def delete(db: AsyncSession, category_id: int) -> None:
     db_category = await db.get(CategorySchema, category_id)

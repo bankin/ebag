@@ -7,6 +7,8 @@ from app.db.util.timestamps import TimestampedModel
 
 
 class Product(TimestampedModel, table=True):
+    __tablename__ = "products"
+
     id: int | None = Field(default=None, primary_key=True)
     title: str = Field()
     description: str = Field(nullable=True)
@@ -14,5 +16,5 @@ class Product(TimestampedModel, table=True):
     sku: str = Field()
     price: decimal.Decimal = Field()
 
-    category_id: int = Field(default=None, foreign_key='category.id')
+    category_id: int = Field(default=None, foreign_key='categories.id')
     category: Category = Relationship(back_populates='products')

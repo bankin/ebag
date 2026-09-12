@@ -8,14 +8,16 @@ if TYPE_CHECKING:
     from app.db.schema.product import Product
 
 class Category(TimestampedModel, table=True):
+    __tablename__ = "categories"
+
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field()
 
-    parent_id: int | None = Field(default=None, nullable=True, foreign_key='category.id')
+    parent_id: int | None = Field(default=None, nullable=True, foreign_key='categories.id')
 
     parent: Optional['Category'] = Relationship(
         back_populates="children",
-        sa_relationship_kwargs={"lazy": "select", "remote_side": "Category.id"},
+        sa_relationship_kwargs={"lazy": "selectin", "remote_side": "Category.id"},
     )
     children: list['Category'] = Relationship(back_populates='parent')
 
