@@ -29,7 +29,9 @@ def save_image(content_type: str | None, content: bytes) -> str:
         )
 
     if len(content) > MAX_IMAGE_SIZE_BYTES:
-        raise InvalidImageError(f"Image exceeds the {MAX_IMAGE_SIZE_BYTES // (1024 * 1024)}MB limit")
+        raise InvalidImageError(
+            f"Image exceeds the {MAX_IMAGE_SIZE_BYTES // (1024 * 1024)}MB limit"
+        )
 
     if not content:
         raise InvalidImageError("Image file is empty")

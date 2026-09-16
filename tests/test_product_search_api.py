@@ -4,6 +4,7 @@ concerns that only exist at that layer: query param validation and request
 wiring. Filtering/query logic itself is covered in tests/test_product_search.py.
 """
 
+
 async def test_route_rejects_negative_limit(client):
     r = await client.get("/products/search", params={"limit": -1})
 

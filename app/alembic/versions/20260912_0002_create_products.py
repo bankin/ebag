@@ -8,7 +8,6 @@ Create Date: 2026-09-12
 from __future__ import annotations
 
 import sqlalchemy as sa
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -33,8 +32,18 @@ def upgrade() -> None:
             sa.ForeignKey("categories.id", ondelete="RESTRICT"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
         sa.UniqueConstraint("sku", name="uq_product_sku"),
         sa.CheckConstraint("price >= 0", name="ck_product_price_non_negative"),
     )

@@ -31,16 +31,29 @@ class InvalidImageError(Exception):
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(NotFoundError)
     async def handle_not_found(request: Request, exc: NotFoundError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": exc.message})
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"detail": exc.message}
+        )
 
     @app.exception_handler(NameConflictError)
-    async def handle_name_conflict(request: Request, exc: NameConflictError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": exc.message})
+    async def handle_name_conflict(
+        request: Request, exc: NameConflictError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT, content={"detail": exc.message}
+        )
 
     @app.exception_handler(ConflictError)
     async def handle_conflict(request: Request, exc: ConflictError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": exc.message})
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT, content={"detail": exc.message}
+        )
 
     @app.exception_handler(InvalidImageError)
-    async def handle_invalid_image(request: Request, exc: InvalidImageError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": exc.message})
+    async def handle_invalid_image(
+        request: Request, exc: InvalidImageError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": exc.message},
+        )

@@ -1,5 +1,5 @@
 import decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
@@ -19,11 +19,11 @@ class Product(TimestampedModel, table=True):
     sku: str = Field()
     price: decimal.Decimal = Field()
 
-    category_id: int = Field(default=None, foreign_key='categories.id')
-    category: Category = Relationship(back_populates='products')
+    category_id: int = Field(default=None, foreign_key="categories.id")
+    category: Category = Relationship(back_populates="products")
 
-    image_id: int | None = Field(default=None, foreign_key='images.id', nullable=True)
-    image: Optional["Image"] = Relationship()
+    image_id: int | None = Field(default=None, foreign_key="images.id", nullable=True)
+    image: Image | None = Relationship()
 
     @property
     def image_url(self) -> str | None:

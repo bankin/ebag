@@ -14,7 +14,11 @@ from tests.conftest import _make_product
 async def test_search_with_no_filters_returns_everything(db_session, seeded):
     results = await ProductService(db_session).search()
 
-    assert {p.sku for p in results} == {"FRUIT-APPLE-1", "FRUIT-ORANGE-1", "VEG-CARROT-1"}
+    assert {p.sku for p in results} == {
+        "FRUIT-APPLE-1",
+        "FRUIT-ORANGE-1",
+        "VEG-CARROT-1",
+    }
 
 
 async def test_search_by_name_is_case_insensitive_partial_match(db_session, seeded):
@@ -30,18 +34,24 @@ async def test_search_by_sku_partial_match(db_session, seeded):
 
 
 async def test_search_by_price_range(db_session, seeded):
-    results = await ProductService(db_session).search(min_price=decimal.Decimal("1.00"), max_price=decimal.Decimal("1.80"))
+    results = await ProductService(db_session).search(
+        min_price=decimal.Decimal("1.00"), max_price=decimal.Decimal("1.80")
+    )
 
     assert [p.sku for p in results] == ["FRUIT-APPLE-1"]
 
 
 async def test_search_by_price_range_is_inclusive(db_session, seeded):
-    results = await ProductService(db_session).search(min_price=decimal.Decimal("1.50"), max_price=decimal.Decimal("1.50"))
+    results = await ProductService(db_session).search(
+        min_price=decimal.Decimal("1.50"), max_price=decimal.Decimal("1.50")
+    )
 
     assert [p.sku for p in results] == ["FRUIT-APPLE-1"]
 
 
-async def test_search_by_category_includes_products_in_child_categories(db_session, seeded):
+async def test_search_by_category_includes_products_in_child_categories(
+    db_session, seeded
+):
     results = await ProductService(db_session).search(category="Fruits")
 
     assert {p.sku for p in results} == {"FRUIT-APPLE-1", "FRUIT-ORANGE-1"}
@@ -66,7 +76,9 @@ async def test_search_by_unknown_category_returns_empty(db_session, seeded):
 
 
 async def test_search_combines_filters(db_session, seeded):
-    results = await ProductService(db_session).search(category="Fruits", max_price=decimal.Decimal("1.80"))
+    results = await ProductService(db_session).search(
+        category="Fruits", max_price=decimal.Decimal("1.80")
+    )
 
     assert [p.sku for p in results] == ["FRUIT-APPLE-1"]
 
@@ -88,16 +100,19 @@ async def test_search_respects_limit_and_offset(db_session, seeded):
 # that down: injection-shaped input is treated as an inert literal search
 # term, never breaks the query, and never affects data outside the request.
 
+
 @pytest.mark.parametrize(
     "payload",
     [
         "'; DROP TABLE products; --",
         "' OR '1'='1",
-        "\" OR \"\"=\"",
+        '" OR ""="',
         "%' UNION SELECT * FROM categories --",
     ],
 )
-async def test_search_by_name_with_injection_payload_is_treated_as_literal(db_session, seeded, payload):
+async def test_search_by_name_with_injection_payload_is_treated_as_literal(
+    db_session, seeded, payload
+):
     results = await ProductService(db_session).search(name=payload)
 
     assert results == []
@@ -110,7 +125,9 @@ async def test_search_by_name_with_injection_payload_is_treated_as_literal(db_se
         "' OR '1'='1",
     ],
 )
-async def test_search_by_sku_with_injection_payload_is_treated_as_literal(db_session, seeded, payload):
+async def test_search_by_sku_with_injection_payload_is_treated_as_literal(
+    db_session, seeded, payload
+):
     results = await ProductService(db_session).search(sku=payload)
 
     assert results == []
@@ -123,13 +140,17 @@ async def test_search_by_sku_with_injection_payload_is_treated_as_literal(db_ses
         "' OR '1'='1",
     ],
 )
-async def test_search_by_category_with_injection_payload_is_treated_as_literal(db_session, seeded, payload):
+async def test_search_by_category_with_injection_payload_is_treated_as_literal(
+    db_session, seeded, payload
+):
     results = await ProductService(db_session).search(category=payload)
 
     assert results == []
 
 
-async def test_search_survives_injection_attempts_and_still_works_afterward(db_session, seeded):
+async def test_search_survives_injection_attempts_and_still_works_afterward(
+    db_session, seeded
+):
     await ProductService(db_session).search(name="'; DROP TABLE products; --")
     await ProductService(db_session).search(sku="'; DROP TABLE products; --")
     await ProductService(db_session).search(category="'; DROP TABLE categories; --")
@@ -139,13 +160,13 @@ async def test_search_survives_injection_attempts_and_still_works_afterward(db_s
 
 
 async def test_search_with_negative_min_price_matches_everything(db_session, seeded):
-    results = await ProductService(db_session).search(min_price=decimal.Decimal("-5"))
+    results = await ProductService(db_session).search(min_price=decimal.Decimal(-5))
 
     assert len(results) == 3
 
 
 async def test_search_with_negative_max_price_matches_nothing(db_session, seeded):
-    results = await ProductService(db_session).search(max_price=decimal.Decimal("-5"))
+    results = await ProductService(db_session).search(max_price=decimal.Decimal(-5))
 
     assert results == []
 

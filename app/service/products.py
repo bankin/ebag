@@ -10,7 +10,8 @@ from app.config.exceptions import NameConflictError, NotFoundError
 from app.db.main import get_session
 from app.db.schema.category import Category as CategorySchema
 from app.db.schema.product import Product as ProductSchema
-from app.models.product import ProductRead as Product, ProductCreate, ProductUpdate
+from app.models.product import ProductCreate, ProductUpdate
+from app.models.product import ProductRead as Product
 from app.service.categories import CategoryService
 from app.service.images import ImageService
 
@@ -61,11 +62,16 @@ class ProductService:
 
         return await self.get(db_product.id)
 
-    async def _image_still_in_use(self, image_id: int, excluding_product_id: int) -> bool:
+    async def _image_still_in_use(
+        self, image_id: int, excluding_product_id: int
+    ) -> bool:
         count = await self.db.scalar(
             select(func.count())
             .select_from(ProductSchema)
-            .where(ProductSchema.image_id == image_id, ProductSchema.id != excluding_product_id)
+            .where(
+                ProductSchema.image_id == image_id,
+                ProductSchema.id != excluding_product_id,
+            )
         )
         return bool(count)
 
@@ -120,7 +126,9 @@ class ProductService:
 
             raise NameConflictError("Product SKU already exists")
 
-        if old_image_id is not None and not await self._image_still_in_use(old_image_id, product_id):
+        if old_image_id is not None and not await self._image_still_in_use(
+            old_image_id, product_id
+        ):
             await self.images.delete(old_image_id)
 
         return await self.get(product_id)
@@ -136,7 +144,9 @@ class ProductService:
         await self.db.delete(db_product)
         await self.db.commit()
 
-        if old_image_id is not None and not await self._image_still_in_use(old_image_id, product_id):
+        if old_image_id is not None and not await self._image_still_in_use(
+            old_image_id, product_id
+        ):
             await self.images.delete(old_image_id)
 
     async def _resolve_category_ids(self, category_name: str) -> list[int]:
@@ -146,7 +156,9 @@ class ProductService:
         parent_id -> id."""
         roots = (
             await self.db.scalars(
-                select(CategorySchema.id).where(func.lower(CategorySchema.name) == category_name.lower())
+                select(CategorySchema.id).where(
+                    func.lower(CategorySchema.name) == category_name.lower()
+                )
             )
         ).all()
 
@@ -178,10 +190,18 @@ class ProductService:
         stmt = select(ProductSchema).options(*_LOAD_OPTIONS)
 
         if name:
-            stmt = stmt.where(ProductSchema.title.ilike(f"%{_escape_like(name)}%", escape=_LIKE_ESCAPE_CHAR))
+            stmt = stmt.where(
+                ProductSchema.title.ilike(
+                    f"%{_escape_like(name)}%", escape=_LIKE_ESCAPE_CHAR
+                )
+            )
 
         if sku:
-            stmt = stmt.where(ProductSchema.sku.ilike(f"%{_escape_like(sku)}%", escape=_LIKE_ESCAPE_CHAR))
+            stmt = stmt.where(
+                ProductSchema.sku.ilike(
+                    f"%{_escape_like(sku)}%", escape=_LIKE_ESCAPE_CHAR
+                )
+            )
 
         if min_price is not None:
             stmt = stmt.where(ProductSchema.price >= min_price)

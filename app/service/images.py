@@ -12,7 +12,9 @@ class ImageService:
     def __init__(self, db: AsyncSession = Depends(get_session)):
         self.db = db
 
-    async def create(self, original_name: str, content_type: str | None, content: bytes) -> ImageRead:
+    async def create(
+        self, original_name: str, content_type: str | None, content: bytes
+    ) -> ImageRead:
         internal_name = storage.save_image(content_type, content)
 
         db_image = ImageSchema(original_name=original_name, internal_name=internal_name)

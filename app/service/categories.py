@@ -8,7 +8,8 @@ from app.config.exceptions import ConflictError, NameConflictError, NotFoundErro
 from app.db.main import get_session
 from app.db.schema.category import Category as CategorySchema
 from app.db.schema.product import Product as ProductSchema
-from app.models.category import CategoryRead as Category, CategoryCreate, CategoryUpdate
+from app.models.category import CategoryCreate, CategoryUpdate
+from app.models.category import CategoryRead as Category
 
 # The parent relationship defaults to lazy loading (async-unsafe outside an
 # await). Load it explicitly, one level deep, wherever a Category is read.
@@ -112,10 +113,14 @@ class CategoryService:
             raise NotFoundError(f"Category {category_id} not found")
 
         child_count = await self.db.scalar(
-            select(func.count()).select_from(CategorySchema).where(CategorySchema.parent_id == category_id)
+            select(func.count())
+            .select_from(CategorySchema)
+            .where(CategorySchema.parent_id == category_id)
         )
         product_count = await self.db.scalar(
-            select(func.count()).select_from(ProductSchema).where(ProductSchema.category_id == category_id)
+            select(func.count())
+            .select_from(ProductSchema)
+            .where(ProductSchema.category_id == category_id)
         )
 
         if child_count or product_count:

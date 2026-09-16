@@ -5,12 +5,13 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlmodel import SQLModel
 
+from app.db.main import get_session
+
 # Import both schema modules so their tables are registered on
 # SQLModel.metadata before create_all() runs below.
 from app.db.schema import category, product  # noqa: F401
 from app.db.schema.category import Category as CategorySchema
 from app.db.schema.product import Product as ProductSchema
-from app.db.main import get_session
 from app.main import app
 
 
@@ -47,7 +48,9 @@ async def client(db_session):
     app.dependency_overrides.clear()
 
 
-async def _make_category(db: AsyncSession, name: str, parent_id: int | None = None) -> CategorySchema:
+async def _make_category(
+    db: AsyncSession, name: str, parent_id: int | None = None
+) -> CategorySchema:
     db_category = CategorySchema(name=name, parent_id=parent_id)
     db.add(db_category)
     await db.commit()
@@ -55,8 +58,12 @@ async def _make_category(db: AsyncSession, name: str, parent_id: int | None = No
     return db_category
 
 
-async def _make_product(db: AsyncSession, title: str, sku: str, price: str, category_id: int) -> ProductSchema:
-    db_product = ProductSchema(title=title, sku=sku, price=decimal.Decimal(price), category_id=category_id)
+async def _make_product(
+    db: AsyncSession, title: str, sku: str, price: str, category_id: int
+) -> ProductSchema:
+    db_product = ProductSchema(
+        title=title, sku=sku, price=decimal.Decimal(price), category_id=category_id
+    )
     db.add(db_product)
     await db.commit()
     await db.refresh(db_product)
@@ -75,8 +82,12 @@ async def seeded(db_session: AsyncSession) -> dict[str, object]:
     vegetables = await _make_category(db_session, "Vegetables")
 
     apple = await _make_product(db_session, "Apple", "FRUIT-APPLE-1", "1.50", fruits.id)
-    orange = await _make_product(db_session, "Orange", "FRUIT-ORANGE-1", "2.00", citrus.id)
-    carrot = await _make_product(db_session, "Carrot", "VEG-CARROT-1", "0.75", vegetables.id)
+    orange = await _make_product(
+        db_session, "Orange", "FRUIT-ORANGE-1", "2.00", citrus.id
+    )
+    carrot = await _make_product(
+        db_session, "Carrot", "VEG-CARROT-1", "0.75", vegetables.id
+    )
 
     return {
         "fruits": fruits,

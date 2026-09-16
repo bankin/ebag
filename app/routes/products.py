@@ -5,10 +5,8 @@ from fastapi import APIRouter, Depends, Query
 from app.models.product import ProductRead
 from app.service.products import ProductService
 
-router = APIRouter(
-    prefix="/products",
-    tags=["products"]
-)
+router = APIRouter(prefix="/products", tags=["products"])
+
 
 @router.get("/search", response_model=list[ProductRead])
 async def search(
