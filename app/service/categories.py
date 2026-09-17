@@ -59,6 +59,11 @@ class CategoryService:
 
         return await self.get(db_category.id)
 
+    async def get_all(self) -> list[Category]:
+        db_categories = await self.db.scalars(select(CategorySchema).options(*_WITH_PARENT))
+
+        return [Category.model_validate(c) for c in db_categories.all()]
+
     async def get(self, category_id: int) -> Category:
         db_category = await self.db.get(
             CategorySchema, category_id, options=_WITH_PARENT, populate_existing=True

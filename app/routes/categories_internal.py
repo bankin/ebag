@@ -6,6 +6,10 @@ from app.service.categories import CategoryService
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 
+@router.get("/", response_model=list[CategoryRead])
+async def read_categories(service: CategoryService = Depends(CategoryService)) -> list[CategoryRead]:
+    return await service.get_all()
+
 @router.get("/{category_id}", response_model=CategoryRead)
 async def read(
     category_id: int, service: CategoryService = Depends(CategoryService)

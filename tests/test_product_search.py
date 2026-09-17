@@ -1,8 +1,3 @@
-"""Unit tests for app.service.products.search() itself — no HTTP layer, no
-FastAPI app involved. Route-level concerns (query param validation, wiring)
-are covered separately in tests/test_product_search_api.py.
-"""
-
 import decimal
 
 import pytest
@@ -90,15 +85,6 @@ async def test_search_respects_limit_and_offset(db_session, seeded):
     assert len(first_page) == 1
     assert len(second_page) == 1
     assert first_page[0].sku != second_page[0].sku
-
-
-# --- invalid / adversarial params -------------------------------------------
-#
-# name/sku/category are never string-concatenated into SQL — they always go
-# in as bound parameters (see .ilike(f"%{name}%"), which only builds the
-# *value*, and func.lower(...) == category_name.lower()). These tests pin
-# that down: injection-shaped input is treated as an inert literal search
-# term, never breaks the query, and never affects data outside the request.
 
 
 @pytest.mark.parametrize(
